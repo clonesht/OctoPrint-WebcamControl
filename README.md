@@ -9,7 +9,7 @@ Change webcamera parameters instantly from the sidebar.
 
 Wanted a quick and easy solution to adjust my webcam focus/exposure/tilt.
 MJPG Streamer has a similar interface, but I was not satisfied with the quality and bandwidth usage,
-I [switched to H264 codec](octoprint_webcam_control/static/html/), so it's no longer an option.
+I [switched to H264 codec](octoprint_webcam_control/static/html/h264_helper.html), so it's no longer an option.
 
 ## Setup
 
