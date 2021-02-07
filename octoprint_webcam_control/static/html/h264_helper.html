@@ -8,7 +8,7 @@ High quality, low cpu (2%) and bandwidth (3 Mbps) H264 stream with compatible we
 
  - Run `cvlc --no-audio v4l2:///dev/video0 --v4l2-width 1920 --v4l2-height 1080 --v4l2-chroma h264 --v4l2-fps 30 --sout '#standard{access=http{mime=video/mp4},mux=mkv,dst=:8554/video.mp4}' -I dummy`
  - Install Webcam Iframe plugin: https://plugins.octoprint.org/plugins/webcam_iframe/
- - Set camera url to `/plugin/WebcamControl/static/html/h264_helper.html` in OctoPrint settings
+ - Set camera url to `/plugin/webcam_control/static/html/h264_helper.html` in OctoPrint settings
 
 List of compatible cameras: https://en.everybodywiki.com/List_of_cameras_with_onboard_video_compression
 

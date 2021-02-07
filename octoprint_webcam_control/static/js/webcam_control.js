@@ -12,7 +12,7 @@ $(function() {
 
         self.getDevices = ko.pureComputed(function() {
             back = [{"name": "-- Select device --"}];
-            devices = self.settingsViewModel.settings.plugins.WebcamControl.devices();
+            devices = self.settingsViewModel.settings.plugins.webcam_control.devices();
             for (var device of devices) {
                 back.push({"name": device});
             }
@@ -21,8 +21,8 @@ $(function() {
 
         self.onStartupComplete = function() {
             window.plugin_webcam_control = self;
-            $("#sidebar_plugin_WebcamControl_wrapper > div.accordion-heading > a").prepend("<i class='fa icon-black fa-sliders-h'/>");
-            self.sidebar = $("#sidebar_plugin_WebcamControl_wrapper #webcam_control");
+            $("#sidebar_plugin_webcam_control_wrapper > div.accordion-heading > a").prepend("<i class='fa icon-black fa-sliders-h'/>");
+            self.sidebar = $("#sidebar_plugin_webcam_control_wrapper #webcam_control");
 
             self.selectedDevice.subscribe(self.handleDeviceChange);
         };
@@ -70,7 +70,7 @@ $(function() {
             $(".UICLargeSpan").css({position: "sticky", top: "20px"});  // Control list can be long, keep webcam picture on the screen
 
             self.isDisabled(true);
-            OctoPrint.simpleApiCommand("WebcamControl", "get_controls", {"device": self.device})
+            OctoPrint.simpleApiCommand("webcam_control", "get_controls", {"device": self.device})
                 .done(self.displayControls)
                 .fail(function () { self.handleError("Unable to get controls") } )
                 .always(function () { self.isDisabled(false); });
@@ -87,7 +87,7 @@ $(function() {
 
         self.doControlChange = function(control) {
             self.output(`Saving: ${control.name} -> ${control.value()}`)
-            OctoPrint.simpleApiCommand("WebcamControl", "set_control", {"device": self.device, "control_id": control.control_id, "value": parseInt(control.value())})
+            OctoPrint.simpleApiCommand("webcam_control", "set_control", {"device": self.device, "control_id": control.control_id, "value": parseInt(control.value())})
                 .done(function(res) {
                     if (res.error) {
                         self.output(`Error: ${control.name} -> ${control.value()} (${res.error})`);
@@ -122,6 +122,6 @@ $(function() {
     OCTOPRINT_VIEWMODELS.push({
         construct: WebcamControlViewModel,
         dependencies: ["settingsViewModel", "controlViewModel"],
-        elements: ["#sidebar_plugin_WebcamControl"]
+        elements: ["#sidebar_plugin_webcam_control"]
     });
 });

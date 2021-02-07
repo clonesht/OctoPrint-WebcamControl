@@ -48,7 +48,7 @@ class WebcamControlPlugin(octoprint.plugin.SettingsPlugin, octoprint.plugin.Asse
 
     def get_update_information(self):
         return dict(
-            webcamcontrol=dict(
+            webcam_control=dict(
                 displayName="Webcam Control",
                 displayVersion=self._plugin_version,
 
@@ -109,8 +109,6 @@ class WebcamControlPlugin(octoprint.plugin.SettingsPlugin, octoprint.plugin.Asse
         return camera.setValue(control_id, value)
 
 __plugin_name__ = "Webcam Control"
-__plugin_version__ = "1.0.0"
-__plugin_description__ = "Change Webcam parameters"
 __plugin_pythoncompat__ = ">=3,<4"
 
 
