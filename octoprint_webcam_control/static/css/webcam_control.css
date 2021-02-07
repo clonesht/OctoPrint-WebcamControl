@@ -1,0 +1,14 @@
+#wc_devices { font-size: 70%; }
+#wc_output { font-size: 11px; font-family: monospace; white-space: pre-wrap; }
+
+#wc_controls .wc_details { font-size: 72%; opacity: 0.7; margin-top: -5px; }
+#wc_controls .wc_control { text-align: right; }
+
+#wc_controls .wc_control label { transition: border 0.3s; border-left: 3px solid transparent; box-sizing: border-box; }
+#wc_controls .wc_changed label { border-left: 3px solid #5a86de; }
+#wc_controls .wc_pending label { border-left: 3px solid #AAA; }
+#wc_controls .wc_error label { border-left: 3px solid #e91e63; }
+
+#wc_controls .wc_value { font-size: 80%; }
+#wc_controls .wc_not_default .wc_name { border-bottom: 1px solid #CCC; }
+#wc_controls .wc_value_names { display: block; }

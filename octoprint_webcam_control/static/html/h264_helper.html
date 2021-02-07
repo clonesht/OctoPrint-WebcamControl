@@ -1,0 +1,170 @@
+<html>
+<body style="padding: 0px; margin: 0px">
+<!--
+
+Autoplay, lag minimizer (buffer_target_default = 0.3s by default) and re-sync after pause for MKV/H264 streams.
+
+High quality, low cpu (2%) and bandwidth (3 Mbps) H264 stream with compatible web cameras:
+
+ - Run `cvlc --no-audio v4l2:///dev/video0 --v4l2-width 1920 --v4l2-height 1080 --v4l2-chroma h264 --v4l2-fps 30 --sout '#standard{access=http{mime=video/mp4},mux=mkv,dst=:8554/video.mp4}' -I dummy`
+ - Install Webcam Iframe plugin: https://plugins.octoprint.org/plugins/webcam_iframe/
+ - Set camera url to `/plugin/WebcamControl/static/html/h264_helper.html` in OctoPrint settings
+
+List of compatible cameras: https://en.everybodywiki.com/List_of_cameras_with_onboard_video_compression
+
+-->
+<script>
+// Configuration
+
+buffer_target_default = 0.3;  // (seconds) lower setting: less lag, but requires stable connection
+</script>
+
+<style type="text/css">
+#video::-webkit-media-controls { visibility: hidden; }
+#video::-webkit-media-controls-enclosure { visibility: visible; }
+#stats { position: fixed; background-color: #000000b3; color: white; top: 0px; padding: 5px; right: 0px; font-family: monospace; font-size: 10px; }
+</style>
+<video id="video" controls muted width="100%" height="100%" preload>
+    <source id="video_src" src="" type="video/mp4">
+</video>
+<div id="stats"></div>
+
+<script>
+document.getElementById("video_src").src = window.location.origin.replace(/:[0-9]+/, ":8554") + "/video.mp4";
+
+video = document.getElementById("video");
+video.play();
+
+buffer_target = buffer_target_default;
+
+video_status = "Loading";
+function setStatus(status) {
+    console.log("Video status: " + status);
+    video_status = status;
+
+}
+
+reload_timer = null;
+video.onplay = function() {
+    console.log("Video play");
+    if (video_stats_first == null) return;
+    if (reload_timer != null) return;
+    reload_timer = setTimeout(function() {
+        setTimeout(function() {
+            reload_timer = null;
+        }, 3000);
+        if (video.buffered.length) {
+            setStatus("Re-syncing");
+            video.currentTime = video.buffered.end(0);
+            video.load();
+            video.play();
+        }
+    }, 1000);
+}
+
+stats = document.getElementById("stats");
+video_stats_first = null;
+video.onplaying = function(e) {
+    console.log("Video playing", e);
+    video_stats_first = video.getVideoPlaybackQuality();
+    video_stats_first.currentTime = video.currentTime;
+    video_stats_first.now = Date.now();
+    video_stats_last = video_stats_first;
+    setStatus("Playing");
+    catchUp();
+};
+
+timer_catchup = null;
+function catchUp() {
+    clearInterval(timer_catchup);
+    setStatus("Catching up, buffer target: " + buffer_target);
+    timer_catchup = setInterval(function() {
+        if (!video.buffered.length) return false;
+        var buffer_left = video.buffered.end(0) - video.currentTime;
+        if (buffer_left > buffer_target * 3) {
+            video.playbackRate = 2;
+        } else if (buffer_left > buffer_target * 2) {
+            video.playbackRate = 1.5;
+        } else if (buffer_left > buffer_target) {
+            video.playbackRate = 1.1;
+        } else {
+            clearInterval(timer_catchup);
+            video.playbackRate = 1;
+            video_stats_first = video.getVideoPlaybackQuality();
+            video_stats_first.currentTime = video.currentTime;
+            video_stats_first.now = Date.now();
+            setStatus("Catchup finished");
+        }
+    }, 500);
+}
+
+function updateStats() {
+    if (!video_stats_first) {
+        stats.innerHTML = `[${video_status}]<br>`;
+        return "";
+    }
+    var video_stats = video.getVideoPlaybackQuality();
+    video_stats.currentTime = video.currentTime;
+
+    var video_time_frame_diff = video.currentTime - video_stats_last.currentTime;
+    var video_time_start_diff = video.currentTime - video_stats_first.currentTime;
+    var time_diff = (Date.now() - video_stats_first.now) / 1000;
+    var fps = (video_stats.totalVideoFrames - video_stats_last.totalVideoFrames) / video_time_frame_diff;
+
+    stats.innerHTML = `Fps: ${fps.toFixed(1)}<br>`;
+    if (video_stats.droppedVideoFrames)
+        stats.innerHTML += `Dropped: ${video_stats.droppedVideoFrames}<br>`
+    if (video_stats.corruptedVideoFrames)
+        stats.innerHTML += `Corrupted: ${video_stats.corruptedVideoFrames}<br>`
+
+    var stream_lag = 0 - (video_time_start_diff - time_diff);
+    if (Math.abs(stream_lag) > 0.2) stats.innerHTML += `Lag: ${(stream_lag).toFixed(1)}s<br>`;
+
+    if (video.buffered.length) {
+        var buffer_left = video.buffered.end(0) - video.currentTime;
+        stats.innerHTML += `Buffer: ${(buffer_left).toFixed(1)}s<br>`;
+    }
+
+    if (video.playbackRate != 1)
+    stats.innerHTML += `Speed: ${video.playbackRate}x<br>`;
+
+    if (stream_lag < -15 || stream_lag > 10) {
+        video.load();
+        setStatus(`Video fps ${fps.toFixed(1)}, lag: ${stream_lag} reloading.`);
+        video_stats_first = null;
+        video.load();
+        video.play();
+    };
+
+    video_stats_last = video_stats;
+
+}
+
+video.onanimationstart = function(e) { console.log("Video animation start", arguments); }
+video.onpause = function(e) {
+    console.log("Video pause", arguments);
+    buffer_target = buffer_target_default;
+}
+video.oncanplay = function(e) { console.log("Video canplay", arguments); }
+video.onseeking = function(e) { console.log("Video seeking", arguments); }
+//video.ontimeupdate = function(e) { console.log("Video timeupdate", arguments); }
+video.onwaiting = function(e) {
+    setStatus("Waiting");
+    setTimeout(function () {
+        if (video_status != "Waiting") return;
+
+        if (video.playbackRate > 1) {
+            console.log("Reverting playbackRate from " + video.playbackRate);
+            video.playbackRate = 1;
+        }
+        if (buffer_target < 1) {
+            buffer_target += 0.1;
+            console.log("Camera buffer outrun, increasing buffer target to " + buffer_target);
+        }
+    }, 1000);
+}
+
+setInterval(updateStats, 1000);
+</script>
+</body>
+</html>

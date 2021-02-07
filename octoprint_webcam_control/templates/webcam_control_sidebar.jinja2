@@ -1,0 +1,28 @@
+<div id="webcam_control">
+ <div class="row-fluid">
+  <select id="wc_devices" class="span12" data-bind="foreach: getDevices, value: selectedDevice, disable: isDisabled()">
+   <option data-bind="value: $index, text: name"></option>
+  </select>
+ </div>
+ <div id="wc_controls" data-bind="foreach: {data: controls, afterRender: handleControlRender}">
+  <div class="row-fluid wc_control" data-bind="
+   css: { wc_not_default: set_value() != default_value, wc_pending: set_value() != value(), wc_changed: set_value() != previous_value, wc_error: error(), wc_flags: flags},
+   attr: { title: error() }
+  ">
+   <label class="span9" data-bind="attr: {for: 'wc_input_' + control_id}">
+    <span class="wc_name" data-bind="text: name"></span>
+    <div class="wc_details">
+     <span data-bind="text: range"></span>
+     def.: <span data-bind="text: default_value"></span>
+     prev.: <span data-bind="text: previous_value"></span>
+     <span class="wc_value_names" data-bind="text: value_names ? JSON.stringify(value_names) : ''"></span>
+    </div>
+   </label>
+   <input type="number" class="span3 wc_value" data-bind="
+    attr: {max: maximum, min: minimum, step: step, id: 'wc_input_' + control_id}, value: value, event: {change: $root.handleControlChange},
+    valueUpdate: ['afterkeydown', 'valueChange', 'change']
+   "/>
+  </div>
+ </div>
+ <div id="wc_output" data-bind="text: output"></div>
+</div>
